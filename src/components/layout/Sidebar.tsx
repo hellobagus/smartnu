@@ -13,7 +13,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import logo from '../../assets/images/logo-muslimatNU.webp';
+import logo from '../../assets/images/logo-muslimat.jpg';
 
 interface NavItemProps {
   to: string;

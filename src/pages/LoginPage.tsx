@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { UserRound, Lock, AlertCircle } from 'lucide-react';
-import logo from '../assets/images/logo-muslimatNU.webp';
+import logo from '../assets/images/logo-muslimat.jpg';
 
 
 interface LoginForm {
