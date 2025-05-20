@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { UserRound, Lock, AlertCircle } from 'lucide-react';
+import logo from '../assets/images/logo-muslimatNU.webp';
+
 
 interface LoginForm {
   email: string;
@@ -81,7 +83,7 @@ const LoginPage: React.FC = () => {
       <div className='sm:mx-auto sm:w-full sm:max-w-md px-4'>
         <div className='text-center mb-6'>
           <img
-            src='https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Nahdlatul_Ulama_Logo.svg/960px-Nahdlatul_Ulama_Logo.svg.png'
+            src={logo}
             alt='NU Logo'
             className='mx-auto mb-2'
           />

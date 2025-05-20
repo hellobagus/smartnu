@@ -6,39 +6,61 @@ import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import { Search, Calendar, CreditCard, Plus, Download } from 'lucide-react';
 
-// Mock payment history
-const mockPayments = [
+// List of Indonesian provinces
+const provinces = [
+  'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'Banten'
+];
+
+// Mock member data with branches and payment histories
+const mockMembers = [
   {
     id: '1',
-    type: 'Iuran Bulanan',
-    amount: 50000,
-    date: '05 Oct 2025',
-    status: 'success',
-    method: 'Transfer Bank',
+    name: 'Ahmad Fauzi',
+    province: 'DKI Jakarta',
+    monthlyDues: 50000,
+    paymentHistory: [
+      { id: '1-1', type: 'Iuran Bulanan', amount: 50000, date: '05 Oct 2025', status: 'success', method: 'Transfer Bank' },
+      { id: '1-2', type: 'Iuran Bulanan', amount: 50000, date: '05 Sep 2025', status: 'success', method: 'QRIS' },
+      { id: '1-3', type: 'Pendaftaran', amount: 100000, date: '15 Jan 2023', status: 'success', method: 'Transfer Bank' },
+    ],
   },
   {
     id: '2',
-    type: 'Iuran Bulanan',
-    amount: 50000,
-    date: '05 Sep 2025',
-    status: 'success',
-    method: 'QRIS',
+    name: 'Siti Aminah',
+    province: 'Jawa Barat',
+    monthlyDues: 50000,
+    paymentHistory: [
+      { id: '2-1', type: 'Iuran Bulanan', amount: 50000, date: '10 Oct 2025', status: 'success', method: 'E-Wallet' },
+      { id: '2-2', type: 'Iuran Bulanan', amount: 50000, date: '10 Sep 2025', status: 'pending', method: 'QRIS' },
+    ],
   },
   {
     id: '3',
-    type: 'Iuran Bulanan',
-    amount: 50000,
-    date: '05 Aug 2025',
-    status: 'success',
-    method: 'E-Wallet',
+    name: 'Budi Santoso',
+    province: 'Jawa Tengah',
+    monthlyDues: 50000,
+    paymentHistory: [
+      { id: '3-1', type: 'Iuran Bulanan', amount: 50000, date: '15 Aug 2025', status: 'success', method: 'Transfer Bank' },
+      { id: '3-2', type: 'Pendaftaran', amount: 100000, date: '22 Jun 2023', status: 'success', method: 'Transfer Bank' },
+    ],
   },
   {
     id: '4',
-    type: 'Pendaftaran',
-    amount: 100000,
-    date: '15 Jan 2023',
-    status: 'success',
-    method: 'Transfer Bank',
+    name: 'Dewi Lestari',
+    province: 'Jawa Timur',
+    monthlyDues: 50000,
+    paymentHistory: [
+      { id: '4-1', type: 'Iuran Bulanan', amount: 50000, date: '02 Oct 2025', status: 'success', method: 'QRIS' },
+    ],
+  },
+  {
+    id: '5',
+    name: 'Eko Prasetyo',
+    province: 'Banten',
+    monthlyDues: 50000,
+    paymentHistory: [
+      { id: '5-1', type: 'Pendaftaran', amount: 100000, date: '14 Dec 2023', status: 'success', method: 'Transfer Bank' },
+    ],
   },
 ];
 
@@ -51,16 +73,30 @@ const paymentMethods = [
 
 const PaymentsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedMember, setSelectedMember] = useState('');
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState('');
-  
-  // Filter payments based on search query
-  const filteredPayments = mockPayments.filter(payment => 
-    payment.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    payment.method.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    payment.date.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
+
+  // Filter members based on selected province
+  const filteredMembers = selectedProvince
+    ? mockMembers.filter(member => member.province === selectedProvince)
+    : mockMembers;
+
+  // Get payment history for selected member or all members in selected province
+  const filteredPayments = filteredMembers
+    .filter(member => !selectedMember || member.id === selectedMember)
+    .flatMap(member => member.paymentHistory)
+    .filter(payment => 
+      payment.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payment.method.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payment.date.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  // Calculate total dues for selected province
+  const totalDues = filteredMembers.reduce((sum, member) => sum + member.monthlyDues, 0);
+  const memberCount = filteredMembers.length;
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'success':
@@ -73,13 +109,13 @@ const PaymentsPage: React.FC = () => {
         return <Badge variant="default">{status}</Badge>;
     }
   };
-  
+
   return (
     <Layout title="Pembayaran Iuran">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Pembayaran Iuran</h2>
-          <p className="text-gray-600 mt-1">Kelola dan pantau pembayaran iuran bulanan</p>
+          <p className="text-gray-600 mt-1">Kelola dan pantau pembayaran iuran bulanan per cabang</p>
         </div>
         <Button 
           variant="primary" 
@@ -105,7 +141,26 @@ const PaymentsPage: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
+            <select
+              value={selectedProvince}
+              onChange={(e) => setSelectedProvince(e.target.value)}
+              className="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option value="">Semua Provinsi</option>
+              {provinces.map(province => (
+                <option key={province} value={province}>{province}</option>
+              ))}
+            </select>
+            <select
+              value={selectedMember}
+              onChange={(e) => setSelectedMember(e.target.value)}
+              className="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option value="">Semua Anggota</option>
+              {filteredMembers.map(member => (
+                <option key={member.id} value={member.id}>{member.name}</option>
+              ))}
+            </select>
             <Button variant="outline" icon={<Download size={16} />}>
               Export
             </Button>
@@ -115,6 +170,9 @@ const PaymentsPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Anggota
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tipe
                   </th>
@@ -133,28 +191,34 @@ const PaymentsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPayments.map(payment => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {payment.type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      Rp {payment.amount.toLocaleString('id-ID')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <Calendar size={16} className="mr-2 text-gray-400" />
-                        {payment.date}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {payment.method}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(payment.status)}
-                    </td>
-                  </tr>
-                ))}
+                {filteredPayments.map(payment => {
+                  const member = mockMembers.find(m => m.paymentHistory.some(p => p.id === payment.id));
+                  return (
+                    <tr key={payment.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {member?.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {payment.type}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                        Rp {payment.amount.toLocaleString('id-ID')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Calendar size={16} className="mr-2 text-gray-400" />
+                          {payment.date}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {payment.method}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(payment.status)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             
@@ -171,14 +235,16 @@ const PaymentsPage: React.FC = () => {
             <div className="w-24 h-24 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-4">
               <CreditCard size={36} className="text-green-600" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900">Status: Lunas</h3>
-            <p className="text-sm text-gray-600 mt-1">Terakhir Bayar: 05 October 2025</p>
-            <p className="text-sm text-gray-600 mt-1">Valid hingga: 30 November 2025</p>
+            <h3 className="text-lg font-medium text-gray-900">
+              {selectedProvince ? `Iuran ${selectedProvince}` : 'Iuran Semua Provinsi'}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">Jumlah Anggota: {memberCount}</p>
+            <p className="text-sm text-gray-600 mt-1">Total Iuran Bulanan: Rp {totalDues.toLocaleString('id-ID')}</p>
             
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
               <h4 className="font-medium text-blue-800">Informasi Iuran</h4>
               <p className="text-sm text-blue-700 mt-1">
-                Iuran bulanan dibayarkan setiap awal bulan sebesar Rp 50.000
+                Iuran bulanan dibayarkan setiap awal bulan sebesar Rp 50.000 per anggota
               </p>
             </div>
           </div>
@@ -199,6 +265,23 @@ const PaymentsPage: React.FC = () => {
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Bayar Iuran Bulanan</h3>
+                
+                <div className="mb-4">
+                  <label htmlFor="member" className="block text-sm font-medium text-gray-700">
+                    Pilih Anggota
+                  </label>
+                  <select
+                    id="member"
+                    value={selectedMember}
+                    onChange={(e) => setSelectedMember(e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  >
+                    <option value="">Pilih Anggota</option>
+                    {mockMembers.map(member => (
+                      <option key={member.id} value={member.id}>{member.name} ({member.province})</option>
+                    ))}
+                  </select>
+                </div>
                 
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-2">Jumlah Pembayaran:</p>
@@ -230,10 +313,12 @@ const PaymentsPage: React.FC = () => {
                   <Button 
                     variant="primary"
                     className="w-full sm:ml-3 sm:w-auto"
-                    disabled={!selectedMethod}
+                    disabled={!selectedMethod || !selectedMember}
                     onClick={() => {
                       alert('Pembayaran berhasil!');
                       setShowPayModal(false);
+                      setSelectedMember('');
+                      setSelectedMethod('');
                     }}
                   >
                     Bayar Sekarang
@@ -241,7 +326,11 @@ const PaymentsPage: React.FC = () => {
                   <Button 
                     variant="outline"
                     className="mt-3 w-full sm:mt-0 sm:w-auto"
-                    onClick={() => setShowPayModal(false)}
+                    onClick={() => {
+                      setShowPayModal(false);
+                      setSelectedMember('');
+                      setSelectedMethod('');
+                    }}
                   >
                     Batal
                   </Button>

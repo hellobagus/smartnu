@@ -6,13 +6,25 @@ import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import { Plus, Search, Filter, Download, Edit, Trash2, User, Eye } from 'lucide-react';
 
-// Mock data for members
+// List of Indonesian provinces
+const provinces = [
+  'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Kepulauan Riau', 
+  'Jambi', 'Sumatera Selatan', 'Bangka Belitung', 'Bengkulu', 'Lampung',
+  'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur',
+  'Banten', 'Bali', 'Nusa Tenggara Barat', 'Nusa Tenggara Timur',
+  'Kalimantan Barat', 'Kalimantan Tengah', 'Kalimantan Selatan', 
+  'Kalimantan Timur', 'Kalimantan Utara', 'Sulawesi Utara', 'Sulawesi Tengah',
+  'Sulawesi Selatan', 'Sulawesi Tenggara', 'Gorontalo', 'Sulawesi Barat',
+  'Maluku', 'Maluku Utara', 'Papua', 'Papua Barat'
+];
+
+// Mock data for members with provinces
 const mockMembers = [
   {
     id: '1',
     name: 'Ahmad Fauzi',
     nik: '3374052501850002',
-    branch: 'Jakarta Pusat',
+    province: 'DKI Jakarta',
     status: 'active',
     joinDate: '15 Jan 2023',
     lastPayment: '05 Oct 2025',
@@ -21,7 +33,7 @@ const mockMembers = [
     id: '2',
     name: 'Siti Aminah',
     nik: '3374052501900003',
-    branch: 'Jakarta Selatan',
+    province: 'Jawa Barat',
     status: 'active',
     joinDate: '03 Mar 2023',
     lastPayment: '10 Oct 2025',
@@ -30,7 +42,7 @@ const mockMembers = [
     id: '3',
     name: 'Budi Santoso',
     nik: '3374052501880004',
-    branch: 'Jakarta Barat',
+    province: 'Jawa Tengah',
     status: 'inactive',
     joinDate: '22 Jun 2023',
     lastPayment: '15 Aug 2025',
@@ -39,7 +51,7 @@ const mockMembers = [
     id: '4',
     name: 'Dewi Lestari',
     nik: '3374052501950005',
-    branch: 'Jakarta Timur',
+    province: 'Jawa Timur',
     status: 'active',
     joinDate: '08 Sep 2023',
     lastPayment: '02 Oct 2025',
@@ -48,7 +60,7 @@ const mockMembers = [
     id: '5',
     name: 'Eko Prasetyo',
     nik: '3374052501870006',
-    branch: 'Jakarta Utara',
+    province: 'Banten',
     status: 'pending',
     joinDate: '14 Dec 2023',
     lastPayment: '-',
@@ -62,7 +74,9 @@ interface MemberFormData {
   address: string;
   phone: string;
   email: string;
-  branch: string;
+  province: string;
+  ktpFile?: File | null;
+  kkFile?: File | null;
 }
 
 const MembersPage: React.FC = () => {
@@ -77,24 +91,30 @@ const MembersPage: React.FC = () => {
     address: '',
     phone: '',
     email: '',
-    branch: '',
+    province: '',
+    ktpFile: null,
+    kkFile: null,
   });
   
   // Filter members based on search query
   const filteredMembers = mockMembers.filter(member => 
     member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     member.nik.includes(searchQuery) ||
-    member.branch.toLowerCase().includes(searchQuery.toLowerCase())
+    member.province.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, files } = e.target as HTMLInputElement;
+    if (files) {
+      setFormData(prev => ({ ...prev, [name]: files[0] }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
   
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, would send to API
+    // In a real app, would send to API (including file uploads)
     console.log('Adding new member:', formData);
     setShowAddModal(false);
     // Reset form
@@ -105,7 +125,9 @@ const MembersPage: React.FC = () => {
       address: '',
       phone: '',
       email: '',
-      branch: '',
+      province: '',
+      ktpFile: null,
+      kkFile: null,
     });
   };
   
@@ -212,7 +234,7 @@ const MembersPage: React.FC = () => {
                     {member.nik}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {member.branch}
+                    {member.province}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(member.status)}
@@ -290,13 +312,24 @@ const MembersPage: React.FC = () => {
                       onChange={handleInputChange}
                       required
                     />
-                    <Input
-                      label="Cabang"
-                      name="branch"
-                      value={formData.branch}
-                      onChange={handleInputChange}
-                      required
-                    />
+                    <div>
+                      <label htmlFor="province" className="block text-sm font-medium text-gray-700">
+                        Pilih cabang
+                      </label>
+                      <select
+                        id="province"
+                        name="province"
+                        value={formData.province}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                        required
+                      >
+                        <option value="">Pilih Provinsi</option>
+                        {provinces.map(province => (
+                          <option key={province} value={province}>{province}</option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="sm:col-span-2">
                       <Input
                         label="Alamat"
@@ -320,6 +353,42 @@ const MembersPage: React.FC = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                     />
+                    <div className="sm:col-span-2">
+                      <label htmlFor="ktpFile" className="block text-sm font-medium text-gray-700">
+                        Upload KTP
+                      </label>
+                      <input
+                        type="file"
+                        id="ktpFile"
+                        name="ktpFile"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full text-sm text-gray-500
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-md file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-indigo-50 file:text-indigo-700
+                          hover:file:bg-indigo-100"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label htmlFor="kkFile" className="block text-sm font-medium text-gray-700">
+                        Upload KK
+                      </label>
+                      <input
+                        type="file"
+                        id="kkFile"
+                        name="kkFile"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full text-sm text-gray-500
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-md file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-indigo-50 file:text-indigo-700
+                          hover:file:bg-indigo-100"
+                      />
+                    </div>
                   </div>
                   
                   <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
@@ -381,8 +450,8 @@ const MembersPage: React.FC = () => {
                       <dd className="mt-1 text-sm text-gray-900">{selectedMember.nik}</dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">Cabang</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{selectedMember.branch}</dd>
+                      <dt className="text-sm font-medium text-gray-500">Provinsi</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{selectedMember.province}</dd>
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Status</dt>

@@ -13,6 +13,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import logo from '../../assets/images/logo-muslimatNU.webp';
 
 interface NavItemProps {
   to: string;
@@ -108,7 +109,7 @@ const Sidebar: React.FC<{ isMobile?: boolean; onClose?: () => void }> = ({
       } bg-white border-r`}>
       <div className='p-4 border-b'>
         <img
-          src='https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Nahdlatul_Ulama_Logo.svg/960px-Nahdlatul_Ulama_Logo.svg.png'
+          src={logo}
           alt='NU Logo'
           className='mx-auto mb-2'
         />
